@@ -4,41 +4,39 @@ cmake_minimum_required(VERSION 3.10)
 project(Observer)
 
 # specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 ###########################################
 # Find packages.
 ###########################################
 
-find_package(PCL 1.3 REQUIRED COMPONENTS common io filters visualization)
-
-find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem)
-
 find_package(OpenCV REQUIRED)
 
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+find_package(glog 0.4.0 REQUIRED)
+
+find_package(gflags REQUIRED)
+
+find_package(Boost COMPONENTS filesystem REQUIRED)
+
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
 ###########################################
-# Libraries
+# IMGUI libraries
 ###########################################
 
-add_library(util util.h util.cc)
+add_subdirectory(src/imgui/)
 
 ###########################################
 # Binaries
 ###########################################
 
-add_executable(observer main.cc)
-target_link_libraries(observer PUBLIC util realsense2 ${PCL_LIBRARIES})
-
-add_executable(visualizer visualize.cc)
-target_link_libraries(visualizer PUBLIC ${PCL_LIBRARIES})
-
-add_executable(recorder recorder.cc)
+add_executable(recorder src/recorder.cc)
 target_link_libraries(recorder PUBLIC realsense2)
 
-add_executable(replayer replayer.cc)
-target_link_libraries(replayer PUBLIC util realsense2 ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(replayer src/replayer.cc)
+target_link_libraries(replayer PUBLIC realsense2 ${OpenCV_LIBRARIES})
+
+add_executable(replayer_async src/replayer_async.cc)
+target_link_libraries(replayer_async PUBLIC realsense2 ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} glog::glog gflags imgui_impl_glfw)
