@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < 900; i++) {
     auto frames = pipe.wait_for_frames();
     result = std::time(nullptr);
-    if (i % 20 == 0) {
+    if (i % 50 == 0) {
       std::cout << "Frame " << i << " recorded at "
                 << std::asctime(std::localtime(&result)) << result
                 << " seconds since the Epoch\n";

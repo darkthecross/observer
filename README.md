@@ -14,9 +14,9 @@ Please refer to the [official installation guide](https://github.com/IntelRealSe
 
 Installation ignored. Trying to get rid of this. Modern desktop computers can not process point clouds in real time as of 2020.
 
-### IMGUI
+### IMGUI, stb, opengl
 
-Files integrated to src/imgui.
+Files integrated to src/third_pary, or assumed installed.
 
 ### gflags
 
@@ -25,6 +25,10 @@ Files integrated to src/imgui.
 ### glogs
 
 Please refer to the [github homepage](https://github.com/google/glog#building-glog-with-cmake) for glogs.
+
+### glfw3
+
+
 
 ## Reference
 

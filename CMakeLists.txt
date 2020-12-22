@@ -20,23 +20,26 @@ find_package(gflags REQUIRED)
 
 find_package(Boost COMPONENTS filesystem REQUIRED)
 
-INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+find_package(glfw3 3.3 REQUIRED)
+find_package(OpenGL 3.0 REQUIRED)
+find_package(GLEW REQUIRED)
 
 ###########################################
-# IMGUI libraries
+# Libraries
 ###########################################
 
-add_subdirectory(src/imgui/)
+add_library(graphics_util STATIC src/util.h src/util.cc)
+target_link_libraries(graphics_util glfw OpenGL::OpenGL ${OpenCV_LIBRARIES} ${GLEW_LIBRARIES})
 
 ###########################################
 # Binaries
 ###########################################
 
 add_executable(recorder src/recorder.cc)
-target_link_libraries(recorder PUBLIC realsense2)
+target_link_libraries(recorder realsense2)
 
 add_executable(replayer src/replayer.cc)
-target_link_libraries(replayer PUBLIC realsense2 ${OpenCV_LIBRARIES})
+target_link_libraries(replayer realsense2 ${OpenCV_LIBRARIES})
 
 add_executable(replayer_async src/replayer_async.cc)
-target_link_libraries(replayer_async PUBLIC realsense2 ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} glog::glog gflags imgui_impl_glfw)
+target_link_libraries(replayer_async graphics_util realsense2 glfw OpenGL::OpenGL ${OpenCV_LIBRARIES} ${GLEW_LIBRARIES} ${Boost_LIBRARIES} glog::glog gflags)
