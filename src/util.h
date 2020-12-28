@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <opencv2/opencv.hpp>
 
-namespace graphics_util {
+namespace util {
 
 void InitOpenGL(int w, int h);
 
@@ -16,6 +16,10 @@ GLuint MatToTexture(cv::Mat mat, GLenum minFilter, GLenum magFilter, GLenum wrap
 
 void DrawFrame(cv::Mat frame, size_t window_width, size_t window_height);
 
-}  // namespace graphics_util
+int64 GetTimestampMicros();
+
+int64 GetTimestampNanos();
+
+}  // namespace util
 
 #endif

@@ -1,8 +1,11 @@
 #include "util.h"
 
+#include <chrono>
 #include <iostream>
 
-namespace graphics_util {
+namespace util {
+
+using namespace std::chrono;
 
 void InitOpenGL(int w, int h) {
   glViewport(0, 0, w, h);  // use a screen size of WIDTH x HEIGHT
@@ -22,7 +25,7 @@ void InitOpenGL(int w, int h) {
 // Function turn a cv::Mat into a texture, and return the texture ID as a GLuint
 // for use
 GLuint MatToTexture(cv::Mat mat, GLenum minFilter, GLenum magFilter,
-                           GLenum wrapFilter) {
+                    GLenum wrapFilter) {
   // Generate a number for our textureID's unique handle
   GLuint textureID;
   glGenTextures(1, &textureID);
@@ -83,8 +86,7 @@ GLuint MatToTexture(cv::Mat mat, GLenum minFilter, GLenum magFilter,
   return textureID;
 }
 
-void DrawFrame(cv::Mat frame, size_t window_width,
-                       size_t window_height) {
+void DrawFrame(cv::Mat frame, size_t window_width, size_t window_height) {
   // Clear color and depth buffers
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);  // Operate on model-view matrix
@@ -109,4 +111,16 @@ void DrawFrame(cv::Mat frame, size_t window_width,
   glDisable(GL_TEXTURE_2D);
 }
 
-}  // namespace graphics_util
+int64 GetTimestampMicros() {
+  return duration_cast<microseconds>(
+             high_resolution_clock::now().time_since_epoch())
+      .count();
+}
+
+int64 GetTimestampNanos() {
+  return duration_cast<nanoseconds>(
+             high_resolution_clock::now().time_since_epoch())
+      .count();
+}
+
+}  // namespace util
