@@ -28,6 +28,12 @@ static std::string get_sensor_name(const rs2::sensor& sensor) {
     return "Unknown Sensor";
 }
 
+static void key_callback(GLFWwindow* window, int key, int scancode, int action,
+                         int mods) {
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
 void EnqueueFrames(const rs2::pipeline& p, rs2::align a, FramesetQueue* q,
                    std::atomic<bool>* running) {
   rs2::frameset frames;
@@ -53,7 +59,8 @@ void EnqueueFrames(const rs2::pipeline& p, rs2::align a, FramesetQueue* q,
 }
 
 void ProcessFrames(FramesetQueue* q, cv::Mat* output_m,
-                   frame_analyzer::FrameAnalyzer* analyzer, std::atomic<bool>* running) {
+                   frame_analyzer::FrameAnalyzer* analyzer,
+                   std::atomic<bool>* running) {
   while (*running) {
     if (!q->empty()) {
       auto frame_set = q->front();
@@ -124,7 +131,8 @@ int main(int argc, char** argv) {
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  GLFWwindow* window = glfwCreateWindow(848, 480, "Simple example", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(848, 480, "Simple example",
+                                        glfwGetPrimaryMonitor(), NULL);
   if (!window) {
     glfwTerminate();
     LOG(ERROR) << "Error initializing glfw window! ";
@@ -132,6 +140,9 @@ int main(int argc, char** argv) {
   }
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
+
+  glfwSetKeyCallback(window, key_callback);
+
   //  Initialise glew (must occur AFTER window creation or glew will error)
   GLenum err = glewInit();
   if (GLEW_OK != err) {
