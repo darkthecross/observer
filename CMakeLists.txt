@@ -29,10 +29,10 @@ find_package(GLEW REQUIRED)
 ###########################################
 
 add_library(util STATIC src/util.h src/util.cc)
-target_link_libraries(util glfw OpenGL::OpenGL ${OpenCV_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(util glfw OpenGL::OpenGL ${OpenCV_LIBRARIES} ${GLEW_LIBRARIES} realsense2)
 
 add_library(frame_analyzer STATIC src/frame_analyzer.h src/frame_analyzer.cc)
-target_link_libraries(frame_analyzer ${OpenCV_LIBRARIES} realsense2)
+target_link_libraries(frame_analyzer util ${OpenCV_LIBRARIES} realsense2)
 
 ###########################################
 # Binaries
@@ -46,3 +46,6 @@ target_link_libraries(replayer realsense2 ${OpenCV_LIBRARIES})
 
 add_executable(replayer_async src/replayer_async.cc)
 target_link_libraries(replayer_async util frame_analyzer realsense2 glfw OpenGL::OpenGL ${OpenCV_LIBRARIES} ${GLEW_LIBRARIES} ${Boost_LIBRARIES} glog::glog gflags)
+
+add_executable(frame_analyzer_dev src/frame_analyzer_dev.cc)
+target_link_libraries(frame_analyzer_dev util frame_analyzer realsense2 ${OpenCV_LIBRARIES} glog::glog gflags)

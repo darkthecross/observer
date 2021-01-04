@@ -14,6 +14,10 @@
 
 DEFINE_string(input_file_name, "record_golden.bag", "path to recorded file.");
 
+constexpr size_t FRAME_QUEUE_CAPACITY = 10;
+
+using FramesetQueue = std::queue<std::pair<rs2::depth_frame, rs2::video_frame>>;
+
 using namespace cv;
 
 static std::string get_sensor_name(const rs2::sensor& sensor) {
@@ -24,32 +28,44 @@ static std::string get_sensor_name(const rs2::sensor& sensor) {
     return "Unknown Sensor";
 }
 
-void EnqueueDepthFrame(const rs2::pipeline& p, rs2::align a, rs2::frame_queue q,
-                       bool* running) {
+void EnqueueFrames(const rs2::pipeline& p, rs2::align a, FramesetQueue* q,
+                   std::atomic<bool>* running) {
   rs2::frameset frames;
   while (*running) {
     if (p.poll_for_frames(&frames)) {
       // Get processed aligned frame
       auto processed = a.process(frames);
       // Trying to get both other and aligned depth frames
-      rs2::video_frame color = processed.get_depth_frame();
-      q.enqueue(std::move(color));
-      // Sleep for 7ms to reduce cpu usage.
-      std::this_thread::sleep_for(std::chrono::microseconds(7));
+      rs2::video_frame ir_frame = processed.get_infrared_frame();
+      rs2::depth_frame depth_frame = processed.get_depth_frame();
+      q->push(std::make_pair<rs2::depth_frame, rs2::video_frame>(
+          std::move(depth_frame), std::move(ir_frame)));
+      while (q->size() > FRAME_QUEUE_CAPACITY) {
+        LOG(WARNING) << "Frameset dropped from queue.";
+        q->pop();
+      }
+      // Sleep for 100us to reduce cpu usage.
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
   }
   LOG(INFO) << "EqueneFrame thread joined.";
   return;
 }
 
-void ProcessDepthFrame(rs2::frame_queue q, cv::Mat* output_m,
-                       frame_analyzer::DepthFrameAnalyzer* analyzer,
-                       bool* running) {
-  rs2::frame ir_frame;
+void ProcessFrames(FramesetQueue* q, cv::Mat* output_m,
+                   frame_analyzer::FrameAnalyzer* analyzer, std::atomic<bool>* running) {
   while (*running) {
-    if (q.poll_for_frame(&ir_frame)) {
-      auto output = analyzer->AnalyzeFrame(ir_frame);
+    if (!q->empty()) {
+      auto frame_set = q->front();
+      q->pop();
+      auto output = analyzer->AnalyzeFrames(frame_set);
+      if (analyzer->GetNumFramesetsProcessed() % 500 == 0) {
+        LOG(INFO) << "Avg processing time: "
+                  << analyzer->GetAverageFramesetAnalyzeTime() << "us";
+      }
       *output_m = output.marked_img.clone();
+      // Sleep for 100us to reduce cpu usage.
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
   }
   LOG(INFO) << "ProcessFrame thread joined.";
@@ -66,14 +82,22 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   rs2::config cfg;
-  if (!FLAGS_input_file_name.empty()) {
+  if (FLAGS_input_file_name.empty()) {
+    // Start camera stream.
+    LOG(INFO) << "Starting camera stream...";
+    cfg.enable_stream(RS2_STREAM_DEPTH, 848, 480, RS2_FORMAT_Z16, 90);
+    cfg.enable_stream(RS2_STREAM_INFRARED, 848, 480, RS2_FORMAT_Y8, 90);
+  } else {
+    // Read from bag for debug/dev purpose.
     LOG(INFO) << "Replaying record from " << FLAGS_input_file_name;
-    cfg.enable_device_from_file(FLAGS_input_file_name, false);
+    cfg.enable_device_from_file(FLAGS_input_file_name, true);
   }
   rs2::pipeline pipe;
   rs2::align align(RS2_STREAM_INFRARED);
-  const auto CAPACITY = 10;
-  rs2::frame_queue depth_queue(CAPACITY);
+  // rs2::frame_queue depth_queue(CAPACITY);
+
+  FramesetQueue frameset_queue;
+
   auto profile = pipe.start(cfg);
   if (!profile) {
     LOG(ERROR) << "Realsense device error! ";
@@ -118,21 +142,24 @@ int main(int argc, char** argv) {
 
   cv::Mat disp_img;
 
-  frame_analyzer::DepthFrameAnalyzer analyzer(depth_scale);
+  frame_analyzer::FrameAnalyzer analyzer(depth_scale);
   util::InitOpenGL(848, 480);
 
-  bool running = true;
+  std::atomic<bool> running;
+  running = true;
 
-  std::thread enqueue_frame_thread(EnqueueDepthFrame, std::ref(pipe), align,
-                                   std::ref(depth_queue), &running);
-  std::thread process_frame_thread(ProcessDepthFrame, std::ref(depth_queue),
-                                   &disp_img, &analyzer, &running);
+  std::thread enqueue_frame_thread(EnqueueFrames, std::ref(pipe), align,
+                                   &frameset_queue, &running);
+  std::thread process_frame_thread(ProcessFrames, &frameset_queue, &disp_img,
+                                   &analyzer, &running);
 
   while (!glfwWindowShouldClose(window))  // Application still alive?
   {
     util::DrawFrame(disp_img, 848, 480);
     glfwSwapBuffers(window);
     glfwPollEvents();
+    // Limit fps to 110.
+    std::this_thread::sleep_for(std::chrono::milliseconds(9));
   }
 
   running = false;
@@ -143,7 +170,7 @@ int main(int argc, char** argv) {
   process_frame_thread.join();
 
   LOG(INFO) << "Execution completed. Processed "
-            << analyzer.GetNumFramesProcessed() << " frames.";
+            << analyzer.GetNumFramesetsProcessed() << " frames.";
 
   glfwDestroyWindow(window);
   glfwTerminate();

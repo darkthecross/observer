@@ -5,7 +5,15 @@
 
 namespace util {
 
+namespace {
+
 using namespace std::chrono;
+
+constexpr float MAX_DISTANCE = 5.12;
+constexpr size_t FRAME_WIDTH = 828;
+constexpr size_t FRAME_HEIGHT = 480;
+
+}  // namespace
 
 void InitOpenGL(int w, int h) {
   glViewport(0, 0, w, h);  // use a screen size of WIDTH x HEIGHT
