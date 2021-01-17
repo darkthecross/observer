@@ -125,14 +125,17 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "Depth scale: " << depth_scale;
 
+  auto depth_stream = profile.get_stream(RS2_STREAM_DEPTH);
+  rs2_intrinsics depth_stream_intrinsics =
+      depth_stream.as<rs2::video_stream_profile>().get_intrinsics();
+
   if (!glfwInit()) {
     LOG(ERROR) << "Error initializing glfw! ";
     return -1;
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  GLFWwindow* window = glfwCreateWindow(848, 480, "Simple example",
-                                        glfwGetPrimaryMonitor(), NULL);
+  GLFWwindow* window = glfwCreateWindow(848, 480, "Simple example", NULL, NULL);
   if (!window) {
     glfwTerminate();
     LOG(ERROR) << "Error initializing glfw window! ";
@@ -153,7 +156,7 @@ int main(int argc, char** argv) {
 
   cv::Mat disp_img;
 
-  frame_analyzer::FrameAnalyzer analyzer(depth_scale);
+  frame_analyzer::FrameAnalyzer analyzer(depth_stream_intrinsics, depth_scale);
   util::InitOpenGL(848, 480);
 
   std::atomic<bool> running;
