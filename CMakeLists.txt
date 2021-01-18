@@ -24,6 +24,9 @@ find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL 3.0 REQUIRED)
 find_package(GLEW REQUIRED)
 
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIRS})
+
 ###########################################
 # Libraries
 ###########################################

@@ -1,7 +1,9 @@
 #ifndef FRAME_ANALYZER_H
 #define FRAME_ANALYZER_H
 
+#include <Eigen/Dense>
 #include <librealsense2/rs.hpp>
+#include <map>
 #include <opencv2/opencv.hpp>
 #include <vector>
 
@@ -13,18 +15,30 @@ constexpr size_t FRAME_BUFFER_SIZE = 5;
 // constexpr float CONSIDERED_DISTANCE = 4.0;
 
 struct FeaturePoint {
-  float x;
-  float y;
+  Eigen::Vector2f coord;
   float r;
+  FeaturePoint() {
+    coord = Eigen::Vector2f::Zero();
+    r = 0.0;
+  }
 
-  FeaturePoint(float xx, float yy, float rr) : x(xx), y(yy), r(rr) {}
+  FeaturePoint(float xx, float yy, float rr) : r(rr) { coord << xx, yy; }
 };
 
-struct FeatureObject {
-  float position[3];
-  float velocity[3];
-  int unique_id;
+struct WorldObject {
+  Eigen::Vector3f position;
+  float radius;
+  Eigen::Vector3f velocity;
   float belief;
+  FeaturePoint feature;
+  // TODO(fanmx): track trajectory and maybe filter based on traj.
+
+  const std::string DebugString() const {
+    std::stringstream ss;
+    ss << "Pos: " << position << " r: " << radius << " belief: " << belief
+       << " feature: " << feature.coord << ", " << feature.r;
+    return ss.str();
+  }
 };
 
 struct IROutput {
@@ -37,7 +51,6 @@ struct DepthOutput {
 
 struct AnalyzerOutput {
   cv::Mat marked_img;
-  std::vector<FeatureObject> objects;
   size_t frame_count;
 };
 
@@ -49,7 +62,7 @@ class FrameAnalyzer {
   IROutput AnalyzeIRMat(cv::Mat ir_mat);
 
   // Stage 2: Filter IROutput based on depth image.
-  DepthOutput AnalyzeDepthMat(cv::Mat depth_mat, const IROutput &ir_output);
+  DepthOutput AnalyzeDepthMat(cv::Mat depth_mat, const IROutput& ir_output);
 
   // Stage 3: Aggregate to objects.
   AnalyzerOutput ProcessFeaturePoints(const DepthOutput& depth_output);
@@ -74,7 +87,8 @@ class FrameAnalyzer {
 
   float depth_scale_ = 1e-3;
   std::vector<cv::Mat> original_depth_frame_buffer_;
-  std::vector<std::vector<FeaturePoint>> feature_points_buffer_;
+  std::vector<double> frame_ts_buffer_;
+  std::vector<WorldObject> tracked_objects_;
 
   cv::Ptr<cv::SimpleBlobDetector> ir_blob_detector_;
 
