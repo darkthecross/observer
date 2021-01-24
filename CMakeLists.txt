@@ -20,7 +20,7 @@ find_package(gflags REQUIRED)
 
 find_package(Boost COMPONENTS filesystem REQUIRED)
 
-find_package(glfw3 3.3 REQUIRED)
+find_package(glfw3 3.2 REQUIRED)
 find_package(OpenGL 3.0 REQUIRED)
 find_package(GLEW REQUIRED)
 

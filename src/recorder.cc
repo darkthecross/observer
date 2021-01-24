@@ -20,7 +20,12 @@ int main(int argc, char** argv) {
   const std::string record_file_name = ss.str();
   cfg.enable_record_to_file(record_file_name);
 
+  std::cout << "Configuration done, starting pipeline..." << std::endl;
+
   pipe.start(cfg);  // File will be opened in write mode at this point
+
+  std::cout << "Pipeline started..." << std::endl;
+
   for (int i = 0; i < 900; i++) {
     auto frames = pipe.wait_for_frames();
     result = std::time(nullptr);

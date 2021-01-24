@@ -1,6 +1,6 @@
 # opencv
 sudo apt-get update
-sudo apt install build-essential cmake git pkg-config libgtk-3-dev \
+sudo apt -y install build-essential cmake git pkg-config libgtk-3-dev \
     libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
     libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev \
     gfortran openexr libatlas-base-dev python3-dev python3-numpy \
@@ -21,13 +21,15 @@ make -j6
 sudo make install
 
 cd ..
-cd ..
+
+# boost
+sudo apt-get -y install libboost-all-dev
 
 # opengl, glew, glfw
-sudo apt-get install libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev
+sudo apt-get -y install libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev
 
 # gflags, glogs
-sudo apt-get install libgflags-dev
+sudo apt-get -y install libgflags-dev
 git clone https://github.com/google/glog.git
 cd glog
 cmake -H. -Bbuild -G "Unix Makefiles"

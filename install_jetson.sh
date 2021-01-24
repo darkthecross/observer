@@ -5,4 +5,5 @@ cd installRealSenseSDK
 sudo sh installLibrealsense.sh
 
 cd ..
+cd ..
 sudo rm -R install_jetson/

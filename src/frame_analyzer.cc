@@ -130,19 +130,18 @@ FrameAnalyzer::FrameAnalyzer(rs2_intrinsics intrinsics, float depth_scale) {
   ir_blob_detector_params.filterByColor = true;
   ir_blob_detector_params.blobColor = 255;
   ir_blob_detector_params.filterByArea = true;
-  ir_blob_detector_params.minArea = 5;
+  ir_blob_detector_params.minArea = 15;
   ir_blob_detector_params.minThreshold = 150;
   ir_blob_detector_params.maxThreshold = 255;
   ir_blob_detector_params.thresholdStep = 50;
   // Filter by Circularity
-  ir_blob_detector_params.filterByCircularity = false;
+  ir_blob_detector_params.filterByCircularity = true;
   ir_blob_detector_params.minCircularity = 0.1;
   // Filter by Convexity
-  ir_blob_detector_params.filterByConvexity = false;
+  ir_blob_detector_params.filterByConvexity = true;
   ir_blob_detector_params.minConvexity = 0.87;
   // Filter by Inertia
   ir_blob_detector_params.filterByInertia = false;
-  ir_blob_detector_params.minInertiaRatio = 0.01;
   ir_blob_detector_ = cv::SimpleBlobDetector::create(ir_blob_detector_params);
 }
 
