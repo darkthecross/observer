@@ -2,33 +2,25 @@ Experimental code for capturing motion with a realsense camera.
 
 ## Dependencies
 
-### OpenCV
+Boost, Opencv, librealsense, opengl/glew/glfw, gflags, glogs.
 
-Installation ignored since this is very common.
+### install
 
-### librealsense
+This bad boy installs all other dependencies besides librealsense and cuda. 
 
-Please refer to the [official installation guide](https://github.com/IntelRealSense/librealsense/blob/master/doc/installation.md)
+```
+sudo sh install.sh
+```
 
-### PCL
+This one installs realsense on Nvidia Jetson Xavier:
 
-Installation ignored. Trying to get rid of this. Modern desktop computers can not process point clouds in real time as of 2020.
+```
+install_jetson.sh
+```
 
-### OpenGL, glew, glfw
+These scripts downloads >2G data from internet (500G for opencv, 1.4G for cuda) and runs >1 hour on Nvidia Jetson Xavier (compiling opencv from source takes some time.)
 
-Assume installed.
-
-### gflags
-
-``` sudo apt-get install libgflags-dev ```
-
-### glogs
-
-Please refer to the [github homepage](https://github.com/google/glog#building-glog-with-cmake) for glogs.
-
-### glfw3
-
-
+TODO(darkthecross): add script for installing realsense and cuda on ubuntu.
 
 ## Reference
 
