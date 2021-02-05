@@ -43,6 +43,7 @@ struct WorldObject {
 
 struct IROutput {
   std::vector<FeaturePoint> feature_points;
+  cv::Mat ir_mat;
 };
 
 struct DepthOutput {
@@ -65,7 +66,7 @@ class FrameAnalyzer {
   DepthOutput AnalyzeDepthMat(cv::Mat depth_mat, const IROutput& ir_output);
 
   // Stage 3: Aggregate to objects.
-  AnalyzerOutput ProcessFeaturePoints(const DepthOutput& depth_output);
+  AnalyzerOutput ProcessFeaturePoints(const DepthOutput& depth_output, const IROutput& ir_output);
 
   AnalyzerOutput AnalyzeFrames(
       const std::pair<rs2::depth_frame, rs2::video_frame>& frameset);

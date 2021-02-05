@@ -12,7 +12,10 @@
 #include "frame_analyzer.h"
 #include "util.h"
 
-DEFINE_string(input_file_name, "record_golden.bag", "path to recorded file.");
+DEFINE_string(
+    input_file_name,
+    "/home/darkthecross/Documents/observer/data/records/record_golden.bag",
+    "path to recorded file.");
 
 constexpr size_t FRAME_QUEUE_CAPACITY = 10;
 

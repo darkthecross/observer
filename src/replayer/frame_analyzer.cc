@@ -130,15 +130,15 @@ FrameAnalyzer::FrameAnalyzer(rs2_intrinsics intrinsics, float depth_scale) {
   ir_blob_detector_params.filterByColor = true;
   ir_blob_detector_params.blobColor = 255;
   ir_blob_detector_params.filterByArea = true;
-  ir_blob_detector_params.minArea = 15;
+  ir_blob_detector_params.minArea = 5;
   ir_blob_detector_params.minThreshold = 150;
   ir_blob_detector_params.maxThreshold = 255;
   ir_blob_detector_params.thresholdStep = 50;
   // Filter by Circularity
-  ir_blob_detector_params.filterByCircularity = true;
+  ir_blob_detector_params.filterByCircularity = false;
   ir_blob_detector_params.minCircularity = 0.1;
   // Filter by Convexity
-  ir_blob_detector_params.filterByConvexity = true;
+  ir_blob_detector_params.filterByConvexity = false;
   ir_blob_detector_params.minConvexity = 0.87;
   // Filter by Inertia
   ir_blob_detector_params.filterByInertia = false;
@@ -174,7 +174,7 @@ AnalyzerOutput FrameAnalyzer::CorePipeline(
     const std::pair<cv::Mat, cv::Mat>& matset) {
   IROutput ir_out = AnalyzeIRMat(matset.second);
   DepthOutput depth_out = AnalyzeDepthMat(matset.first, ir_out);
-  return ProcessFeaturePoints(depth_out);
+  return ProcessFeaturePoints(depth_out, ir_out);
 }
 
 AnalyzerOutput FrameAnalyzer::AnalyzeFrames(
@@ -215,6 +215,9 @@ IROutput FrameAnalyzer::AnalyzeIRMat(cv::Mat ir_mat) {
   for (const auto& pts : keypoints) {
     output.feature_points.push_back(FeaturePoint(pts.pt.x, pts.pt.y, pts.size));
   }
+
+  output.ir_mat = ir_mat.clone();
+
   return output;
 }
 
@@ -244,6 +247,9 @@ DepthOutput FrameAnalyzer::AnalyzeDepthMat(cv::Mat depth_mat,
   // auto fps1 = FilterByBackground(fps, depth_mat);
   output.filtered_feature_points = FilterByBackground(fps, depth_mat);
 
+  // output.filtered_feature_points = std::vector<FeaturePoint>(
+  //     ir_output.feature_points.begin(), ir_output.feature_points.end());
+
   // Update buffers.
   original_depth_frame_buffer_.push_back(std::move(depth_mat));
   while (original_depth_frame_buffer_.size() > FRAME_BUFFER_SIZE) {
@@ -254,7 +260,7 @@ DepthOutput FrameAnalyzer::AnalyzeDepthMat(cv::Mat depth_mat,
 }
 
 AnalyzerOutput FrameAnalyzer::ProcessFeaturePoints(
-    const DepthOutput& depth_output) {
+    const DepthOutput& depth_output, const IROutput& ir_output) {
   AnalyzerOutput output;
 
   // correspondence[i] = j => tracked_objects_ i corresponds to tmp_world_obj j.
@@ -365,16 +371,18 @@ AnalyzerOutput FrameAnalyzer::ProcessFeaturePoints(
   cv::Mat depth_mat_rgb;
   cv::cvtColor(depth_mat_8u, depth_mat_rgb, COLOR_GRAY2BGR);
 
-  cv::Mat im_with_keypoints = depth_mat_rgb.clone();
+  // cv::Mat im_with_keypoints = depth_mat_rgb.clone();
+  cv::Mat im_with_keypoints;
+  cv::cvtColor(ir_output.ir_mat, im_with_keypoints, COLOR_GRAY2BGR);
   for (const auto& wp : tracked_objects_) {
     if (wp.belief < 0.95) continue;
     const auto& feature = wp.feature;
     cv::circle(im_with_keypoints, Point(feature.coord[0], feature.coord[1]),
-               feature.r, Scalar(0, 0, 255), 2);
+               feature.r, Scalar(0, 0, 255), 4);
   }
   for (const auto& fp : depth_output.filtered_feature_points) {
     cv::circle(im_with_keypoints, Point(fp.coord[0], fp.coord[1]), fp.r,
-               Scalar(255, 0, 0), 1);
+               Scalar(255, 0, 0), 3);
   }
 
   output.marked_img = im_with_keypoints.clone();
